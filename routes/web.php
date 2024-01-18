@@ -1,36 +1,37 @@
 <?php
-
-use App\Http\Controllers\ProfileController;
+ 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\NewsController;
-use App\Http\Controllers\ForumController;
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\VoterController;
+ 
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-Route::get('/news', [NewsController::class, 'index']);
-Route::get('/news/{id}', [NewsController::class, 'show']);
-
-Route::resource('/forums', ForumController::class);
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+ 
+Route::controller(AuthController::class)->group(function () {
+    Route::get('register', 'register')->name('register');
+    Route::post('register', 'registerSave')->name('register.save');
+  
+    Route::get('login', 'login')->name('login');
+    Route::post('login', 'loginAction')->name('login.action');
+  
+    Route::get('logout', 'logout')->middleware('auth')->name('logout');
 });
-
-require __DIR__.'/auth.php';
+  
+Route::middleware('auth')->group(function () {
+    Route::get('dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+ 
+    Route::controller(VoterController::class)->prefix('Voters')->group(function () {
+        Route::get('', 'index')->name('Voters');
+        Route::get('create', 'create')->name('Voters.create');
+        Route::post('store', 'store')->name('Voters.store');
+        Route::get('show/{id}', 'show')->name('Voters.show');
+        Route::get('edit/{id}', 'edit')->name('Voters.edit');
+        Route::put('edit/{id}', 'update')->name('Voters.update');
+        Route::delete('destroy/{id}', 'destroy')->name('Voters.destroy');
+    });
+ 
+    Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile'])->name('profile');
+});
